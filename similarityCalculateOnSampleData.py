@@ -14,6 +14,7 @@ test_data =[]
 batch_size = 64#extend to 128
 learning_rate = 0.001
 
+#获取train_data，train_data为list，结构为[[que1,[ans1,ans2]],[que2,[ans1,ans2,ans3]]...]，其中ans1为que对应的best_answer
 def get_input_data():
     with open('data/yahoo_clean_reduce_train', 'rb') as file:
     #with open('data/output_pickle1.pickle','rb') as file:
@@ -33,6 +34,7 @@ def get_input_data():
             except:
                 print("catch pickle file end exception")
                 break
+#获取test_data
 def get_test_data():
     with open('data/yahoo_clean_reduce_test','rb') as file:
         while True:
@@ -51,6 +53,7 @@ def get_test_data():
             except:
                 print("catch pickle file end exception")
                 break
+#获取小批train_data
 def get_small_input_data():
     with open('data/small_yahoo_clean_reduce_train','rb') as file:
         input_dict = pickle.load(file)
@@ -63,6 +66,7 @@ def get_small_input_data():
                 ans.append(answers_in_dict[i].split())
             que_and_ans.append(ans)
             input.append(que_and_ans)
+#获取batch，每个batch由x,y两个元素组成，x共batch_size个元素，每个元素为30*50矩阵，代表某个que与某个ans的S-matrix，y共batch_size个元素，每个元素为长度为2的list，其值为[1,0]表示当前的ans是当前que的best_answer，值为[0,1]表示不是其best_answer
 def get_batch(batch_size,input):
     total_data_num = len(input)
     start_index = 0
@@ -107,6 +111,7 @@ def get_batch(batch_size,input):
             ys.append([0,1])
         start_index += batch_size
         yield similarity_matrix_batch,ys
+
 
 def get_test_batch(test_data):
     test_data_num = len(test_data)
@@ -229,7 +234,7 @@ def cnn(batch_size,learning_rate,input,test_data):
         print('batch {} accuracy {}'.format(i,result))
 
         #nDCG6
-        if True:
+        if i%10 == 0 and i != 0:
             nDCG6 = 0.0
             for j,test_xs in enumerate(get_test_batch(test_data)):
                 if (len(test_xs)!=6):
@@ -251,13 +256,4 @@ def cnn(batch_size,learning_rate,input,test_data):
 if __name__ == '__main__':
     get_input_data()
     get_test_data()
-    print(len(input))
-    # for i,(similartity_matrix,ys) in enumerate(get_batch(batch_size)):
-    #     print(len(similartity_matrix))
-    #     similartity_matrix_array = np.array(similartity_matrix)
-    #     print(similartity_matrix_array.shape)
-    # print('cnn_start')
-    # for i,similarity_matrix in enumerate(get_test_batch(test_data)):
-    #     if len(similarity_matrix) != 6:
-    #         print ('{}th is {}'.format(i,len(similarity_matrix)))
     cnn(batch_size,learning_rate,input,test_data)
